@@ -1,0 +1,53 @@
+/*
+The createCalendarEvents function will automate entering dates from  Google Sheets into Google Calendar. This will connect our calendar to our spreadsheet.
+
+The clearEvents function will delete all events within a certain time period.
+
+*/
+
+/*<-----------------------------------------CREATES EVENTS ON CALENDAR ONCE YOU TYPE THE NAME OF THE LICENSE AND THE DATE-------------------------------------------->*/
+
+function createCalendarEvent(){
+  const licenseCalendar = CalendarApp.getCalendarById
+  ("/*INSERT SPECIFIC CALENDAR ID HERE*/")
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const schedule = sheet.getRange('/*INSERT THE SPECIFIC RANGE*/').getValues(); 
+
+for (rowIndex = 0; rowIndex < schedule.length; rowIndex ++){
+  var entry = schedule[rowIndex];
+  if (entry[0] == "" || entry[1] == "" || typeof entry[1] == "string"){
+    continue;
+}           
+
+if (schedule[rowIndex][/*INSERT SPECIFIC COLUMN NUMBER WHERE YOU WOULD LIKE TO KEEP TRACK OF EVENT ID's*/] == ""){
+  var event = licenseCalendar.createAllDayEvent("RENEW! " + entry[0], entry[/*INSERT SPECIFIC COLUMN NUMBER WHERE YOU'D LIKE TO ENTER THE DATE OF THE ALL-DAY EVENT*/]);
+  var eventId= event.getId();
+    schedule[rowIndex][/*INSERT SPECIFIC COLUMN NUMBER WHERE YOU WOULD LIKE TO KEEP TRACK OF EVENT ID's*/] = eventId;
+  }
+
+else{
+  var eventId = schedule[rowIndex][/*INSERT SPECIFIC COLUMN NUMBER WHERE YOU WOULD LIKE TO KEEP TRACK OF EVENT ID's*/];
+  var returnedEvent = licenseCalendar.getEventById(eventId);
+  returnedEvent.setAllDayDate(entry[/*INSERT SPECIFIC COLUMN NUMBER WHERE YOU'D LIKE TO ENTER THE DATE OF THE ALL-DAY EVENT*/]);
+     }
+}
+    
+sheet.getRange('/*DECIDE THE RANGE YOU WANT TO UPDATE*/').setValues(schedule);
+}
+
+
+/*<------------------------------------------------------CLEARS ALL EVENTS WITHIN A CERTAIN TIMEFRAME------------------------------------------------------------->*/
+function clearAllEvents(){
+  let licenseCalendar = CalendarApp.getCalendarById
+    ("/*INSERT SPECIFIC CALENDAR ID HERE*/"); 
+  var now = new Date();
+  var futureDate = new Date(now.getTime() + (365 * 24 * 60 * 60 * 1000));
+  var passDate = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
+
+  var events = licenseCalendar.getEvents(now, futureDate, {search:'RENEW'})
+
+  while (events.length > 0){
+    var event = events.pop();
+    event.deleteEvent();
+  }
+}
